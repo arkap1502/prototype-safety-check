@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Prototype Safety Check</title>
+<style>
+  :root { --bg:#0f172a; --card:#1e293b; --text:#e2e8f0; --muted:#94a3b8;
+          --green:#22c55e; --amber:#f59e0b; --red:#ef4444; }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+         background:var(--bg); color:var(--text); }
+  .wrap { max-width:960px; margin:0 auto; padding:24px 16px 64px; }
+  h1 { margin:8px 0 4px; font-size:28px; }
+  p.sub { color:var(--muted); margin:0 0 20px; }
+  .card { background:var(--card); border:1px solid #334155; border-radius:12px;
+          padding:18px; margin:14px 0; }
+  input[type=text] { width:100%; padding:12px; border-radius:8px; border:1px solid #475569;
+                     background:#0b1220; color:var(--text); font-size:15px; }
+  label.consent { display:flex; gap:8px; align-items:flex-start; color:var(--muted);
+                  font-size:13px; margin:10px 0; }
+  button { background:#3b82f6; color:#fff; border:0; border-radius:8px;
+           padding:11px 18px; font-size:15px; cursor:pointer; }
+  button:hover { background:#2563eb; }
+  .btn-ghost { background:#334155; margin-left:8px; }
+  .error { background:#450a0a; border:1px solid var(--red); color:#fecaca;
+           padding:12px; border-radius:8px; margin:12px 0; }
+  .badge { display:inline-block; padding:6px 14px; border-radius:999px;
+           font-weight:700; font-size:15px; }
+  .safe { background:rgba(34,197,94,.15); color:var(--green); border:1px solid var(--green); }
+  .risky { background:rgba(245,158,11,.15); color:var(--amber); border:1px solid var(--amber); }
+  .critical { background:rgba(239,68,68,.15); color:var(--red); border:1px solid var(--red); }
+  .errb { background:#334155; color:#fff; border:1px solid #64748b; }
+  .meta { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+          gap:10px; margin:12px 0; }
+  .meta div { background:#0b1220; border:1px solid #334155; border-radius:8px; padding:10px; }
+  .meta small { color:var(--muted); display:block; font-size:11px; text-transform:uppercase; }
+  .finding { border-left:4px solid #64748b; background:#0b1220; border-radius:0 8px 8px 0;
+             padding:10px 12px; margin:8px 0; }
+  .finding.PASS { border-color:var(--green); }
+  .finding.WARNING { border-color:var(--amber); }
+  .finding.FAIL { border-color:var(--red); }
+  .tag { font-size:11px; font-weight:700; padding:2px 8px; border-radius:999px; margin-right:8px; }
+  .tag.PASS { background:rgba(34,197,94,.2); color:var(--green); }
+  .tag.WARNING { background:rgba(245,158,11,.2); color:var(--amber); }
+  .tag.FAIL { background:rgba(239,68,68,.2); color:var(--red); }
+  .fix { color:#bae6fd; font-size:13px; margin-top:6px; }
+  .cat { margin-top:22px; font-size:18px; border-bottom:1px solid #334155; padding-bottom:6px; }
+  ul.hist { list-style:none; padding:0; margin:0; }
+  ul.hist li { padding:8px 0; border-bottom:1px solid #334155; font-size:14px; color:var(--muted); }
+  code { background:#0b1220; padding:2px 6px; border-radius:6px; font-size:13px; }
+  @media print { body { background:#fff; color:#000; } .card { border-color:#ccc; background:#fff; }
+    button, .no-print { display:none !important; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>🛡️ Prototype Safety Check</h1>
+  <p class="sub">Paste a <b>deployed link</b> (e.g. <code>https://my-app.vercel.app</code>).
+     Repo links (GitHub/GitLab) are not scanned. Passive checks only — no attacks sent.
+     Only scan sites you own or have permission to test.</p>
+
+  <div class="card no-print">
+    <form method="post" action="/scan">
+      <input type="text" name="url" placeholder="https://my-prototype.vercel.app"
+             value="{{ report.target if report else '' }}" required>
+      <label class="consent">
+        <input type="checkbox" name="consent" value="yes" checked>
+        <span>I own this prototype or have permission to run a passive safety scan on it.</span>
+      </label>
+      <button type="submit">Scan now</button>
+      {% if report %}
+      <button type="button" class="btn-ghost" onclick="window.print()">Print / Save PDF</button>
+      <button type="button" class="btn-ghost" onclick="downloadJSON()">Download JSON</button>
+      {% endif %}
+    </form>
+  </div>
+
+  {% if error %}
+  <div class="error">⚠️ {{ error }}</div>
+  {% endif %}
+
+  {% if report %}
+  <div class="card">
+    <span class="badge {{ report.level }}">{{ report.verdict }}</span>
+    <span style="color:var(--muted); margin-left:10px;">
+      {{ report.fails }} FAIL · {{ report.warnings }} WARN · {{ report.passes }} PASS · score {{ report.score }}
+    </span>
+    <div class="meta">
+      <div><small>Target</small>{{ report.target }}</div>
+      <div><small>Final URL</small>{{ report.final_url }}</div>
+      <div><small>Status</small>{{ report.status_code }}</div>
+      <div><small>Time</small>{{ report.response_time_s }}s</div>
+      <div><small>Server</small>{{ report.server }}</div>
+      <div><small>Size</small>{{ report.content_kb }} KB</div>
+      <div><small>TLS</small>{{ report.tls.version if report.tls and report.tls.version else 'n/a' }}</div>
+    </div>
+    <p style="color:var(--muted); font-size:13px;">{{ report.note }}</p>
+    {% if report.redirect_chain %}
+    <p style="font-size:13px; color:var(--muted);">Redirects: {{ report.redirect_chain | join(' → ') }}</p>
+    {% endif %}
+  </div>
+
+  {% for cat in ['MitM','XSS','SQLi','Malware','Phishing','DoS'] %}
+    <div class="cat">{{ {'MitM':'🔒 Man-in-the-Middle','XSS':'✨ Cross-Site Scripting (XSS)','SQLi':'💉 SQL Injection','Malware':'🦠 Malware & Viruses','Phishing':'🎣 Phishing & Spoofing','DoS':'🌊 DoS Exposure'}[cat] }}</div>
+    {% for f in report.findings if f.category == cat %}
+    <div class="finding {{ f.status }}">
+      <span class="tag {{ f.status }}">{{ f.status }}</span><b>{{ f.name }}</b>
+      <div style="margin-top:4px;">{{ f.detail }}</div>
+      {% if f.status != 'PASS' %}<div class="fix">🛠️ Fix: {{ f.fix }}</div>{% endif %}
+    </div>
+    {% endfor %}
+  {% endfor %}
+  {% endif %}
+
+  <div class="card">
+    <h3 style="margin-top:0;">🕘 Re-scan history (last {{ history|length }})</h3>
+    {% if history %}
+    <ul class="hist">
+      {% for h in history %}
+      <li><b>{{ h.verdict }}</b> — {{ h.target }} <span>({{ h.time }})</span></li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <p style="color:var(--muted);">No scans yet.</p>
+    {% endif %}
+    <p style="color:var(--muted); font-size:13px;">API: <code>GET /api/scan?url=https://...</code> ·
+       CLI: <code>python scanner.py https://...</code></p>
+  </div>
+</div>
+
+{% if report %}
+<script>
+const REPORT = {{ report | tojson }};
+function downloadJSON(){
+  const blob = new Blob([JSON.stringify(REPORT, null, 2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'safety-report.json';
+  a.click();
+}
+</script>
+{% endif %}
+</body>
+</html>
