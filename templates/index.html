@@ -5,73 +5,99 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Prototype Safety Check</title>
 <style>
-  :root { --bg:#0f172a; --card:#1e293b; --text:#e2e8f0; --muted:#94a3b8;
-          --green:#22c55e; --amber:#f59e0b; --red:#ef4444; }
+  :root { --bg:#f1f5f9; --card:#ffffff; --text:#0f172a; --muted:#64748b;
+          --line:#e2e8f0; --blue:#2563eb; --blue-d:#1d4ed8;
+          --green:#16a34a; --green-bg:#dcfce7; --amber:#d97706; --amber-bg:#fef3c7;
+          --red:#dc2626; --red-bg:#fee2e2; }
   * { box-sizing:border-box; }
-  body { margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+  body { margin:0; font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
          background:var(--bg); color:var(--text); }
-  .wrap { max-width:960px; margin:0 auto; padding:24px 16px 64px; }
-  h1 { margin:8px 0 4px; font-size:28px; }
-  p.sub { color:var(--muted); margin:0 0 20px; }
-  .card { background:var(--card); border:1px solid #334155; border-radius:12px;
-          padding:18px; margin:14px 0; }
-  input[type=text] { width:100%; padding:12px; border-radius:8px; border:1px solid #475569;
-                     background:#0b1220; color:var(--text); font-size:15px; }
+  .hero { background:linear-gradient(135deg,#2563eb,#7c3aed);
+          color:#fff; padding:36px 16px 28px; }
+  .hero-inner { max-width:960px; margin:0 auto; }
+  .hero h1 { margin:0 0 6px; font-size:30px; }
+  .hero p { margin:0; opacity:.92; font-size:15px; max-width:640px; }
+  .hero code { background:rgba(255,255,255,.2); padding:2px 8px; border-radius:6px; }
+  .wrap { max-width:960px; margin:0 auto; padding:20px 16px 64px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:14px;
+          padding:20px; margin:16px 0; box-shadow:0 1px 3px rgba(15,23,42,.08); }
+  .scan-row { display:flex; gap:10px; }
+  .scan-row input[type=text] { flex:1; padding:12px 14px; border-radius:10px;
+          border:1px solid #cbd5e1; font-size:15px; background:#f8fafc; color:var(--text); }
+  .scan-row input:focus { outline:2px solid #bfdbfe; border-color:var(--blue); background:#fff; }
   label.consent { display:flex; gap:8px; align-items:flex-start; color:var(--muted);
-                  font-size:13px; margin:10px 0; }
-  button { background:#3b82f6; color:#fff; border:0; border-radius:8px;
-           padding:11px 18px; font-size:15px; cursor:pointer; }
-  button:hover { background:#2563eb; }
-  .btn-ghost { background:#334155; margin-left:8px; }
-  .error { background:#450a0a; border:1px solid var(--red); color:#fecaca;
-           padding:12px; border-radius:8px; margin:12px 0; }
-  .badge { display:inline-block; padding:6px 14px; border-radius:999px;
-           font-weight:700; font-size:15px; }
-  .safe { background:rgba(34,197,94,.15); color:var(--green); border:1px solid var(--green); }
-  .risky { background:rgba(245,158,11,.15); color:var(--amber); border:1px solid var(--amber); }
-  .critical { background:rgba(239,68,68,.15); color:var(--red); border:1px solid var(--red); }
-  .errb { background:#334155; color:#fff; border:1px solid #64748b; }
-  .meta { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
-          gap:10px; margin:12px 0; }
-  .meta div { background:#0b1220; border:1px solid #334155; border-radius:8px; padding:10px; }
-  .meta small { color:var(--muted); display:block; font-size:11px; text-transform:uppercase; }
-  .finding { border-left:4px solid #64748b; background:#0b1220; border-radius:0 8px 8px 0;
-             padding:10px 12px; margin:8px 0; }
-  .finding.PASS { border-color:var(--green); }
-  .finding.WARNING { border-color:var(--amber); }
-  .finding.FAIL { border-color:var(--red); }
-  .tag { font-size:11px; font-weight:700; padding:2px 8px; border-radius:999px; margin-right:8px; }
-  .tag.PASS { background:rgba(34,197,94,.2); color:var(--green); }
-  .tag.WARNING { background:rgba(245,158,11,.2); color:var(--amber); }
-  .tag.FAIL { background:rgba(239,68,68,.2); color:var(--red); }
-  .fix { color:#bae6fd; font-size:13px; margin-top:6px; }
-  .cat { margin-top:22px; font-size:18px; border-bottom:1px solid #334155; padding-bottom:6px; }
+                  font-size:13px; margin:12px 0; }
+  button { background:var(--blue); color:#fff; border:0; border-radius:10px;
+           padding:12px 20px; font-size:15px; font-weight:600; cursor:pointer; white-space:nowrap; }
+  button:hover { background:var(--blue-d); }
+  .btn-ghost { background:#f1f5f9; color:var(--text); border:1px solid var(--line); margin-left:8px; }
+  .btn-ghost:hover { background:#e2e8f0; }
+  .error { background:#fef2f2; border:1px solid #fecaca; color:#991b1b;
+           padding:12px 14px; border-radius:10px; margin:12px 0; }
+  .badge { display:inline-block; padding:6px 16px; border-radius:999px;
+           font-weight:800; font-size:15px; letter-spacing:.3px; }
+  .badge.safe { background:var(--green-bg); color:#166534; border:1px solid #86efac; }
+  .badge.risky { background:var(--amber-bg); color:#92400e; border:1px solid #fcd34d; }
+  .badge.critical { background:var(--red-bg); color:#991b1b; border:1px solid #fca5a5; }
+  .badge.error { background:#e2e8f0; color:#334155; border:1px solid #cbd5e1; }
+  .counts { color:var(--muted); margin-left:10px; font-size:14px; }
+  .meta { display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
+          gap:10px; margin:14px 0; }
+  .meta div { background:#f8fafc; border:1px solid var(--line); border-radius:10px;
+              padding:10px; font-size:13px; overflow-wrap:anywhere; }
+  .meta small { color:var(--muted); display:block; font-size:11px; font-weight:700;
+                text-transform:uppercase; margin-bottom:2px; }
+  .cat { margin:26px 0 6px; font-size:18px; font-weight:700;
+         display:flex; align-items:center; gap:8px; }
+  .cat span.n { font-size:12px; color:var(--muted); font-weight:600; }
+  .finding { border:1px solid var(--line); border-left:5px solid #cbd5e1;
+             background:#fff; border-radius:10px; padding:12px 14px; margin:10px 0;
+             box-shadow:0 1px 2px rgba(15,23,42,.05); }
+  .finding.PASS { border-left-color:var(--green); }
+  .finding.WARNING { border-left-color:var(--amber); }
+  .finding.FAIL { border-left-color:var(--red); }
+  .tag { font-size:11px; font-weight:800; padding:3px 10px; border-radius:999px; margin-right:8px; }
+  .tag.PASS { background:var(--green-bg); color:#166534; }
+  .tag.WARNING { background:var(--amber-bg); color:#92400e; }
+  .tag.FAIL { background:var(--red-bg); color:#991b1b; }
+  .fix { background:#eff6ff; border:1px solid #bfdbfe; color:#1e40af;
+         font-size:13px; margin-top:8px; padding:8px 10px; border-radius:8px; }
   ul.hist { list-style:none; padding:0; margin:0; }
-  ul.hist li { padding:8px 0; border-bottom:1px solid #334155; font-size:14px; color:var(--muted); }
-  code { background:#0b1220; padding:2px 6px; border-radius:6px; font-size:13px; }
-  @media print { body { background:#fff; color:#000; } .card { border-color:#ccc; background:#fff; }
-    button, .no-print { display:none !important; } }
+  ul.hist li { padding:9px 0; border-bottom:1px solid var(--line); font-size:14px; color:var(--muted); }
+  ul.hist li:last-child { border-bottom:0; }
+  code.inline { background:#f1f5f9; border:1px solid var(--line); padding:2px 6px;
+                border-radius:6px; font-size:13px; }
+  .footer-note { color:var(--muted); font-size:13px; }
+  @media (max-width:600px){ .scan-row { flex-direction:column; } }
+  @media print { .hero { background:#fff; color:#000; padding:10px 0; }
+    button, .no-print { display:none !important; } .card { box-shadow:none; } }
 </style>
 </head>
 <body>
-<div class="wrap">
-  <h1>🛡️ Prototype Safety Check</h1>
-  <p class="sub">Paste a <b>deployed link</b> (e.g. <code>https://my-app.vercel.app</code>).
-     Repo links (GitHub/GitLab) are not scanned. Passive checks only — no attacks sent.
-     Only scan sites you own or have permission to test.</p>
+<div class="hero">
+  <div class="hero-inner">
+    <h1>🛡️ Prototype Safety Check</h1>
+    <p>Paste a <b>deployed link</b> (e.g. <code>https://my-app.vercel.app</code>).
+       Repo links are not scanned. Passive checks only — no attacks sent.
+       Only scan sites you own or have permission to test.</p>
+  </div>
+</div>
 
+<div class="wrap">
   <div class="card no-print">
     <form method="post" action="/scan">
-      <input type="text" name="url" placeholder="https://my-prototype.vercel.app"
-             value="{{ report.target if report else '' }}" required>
+      <div class="scan-row">
+        <input type="text" name="url" placeholder="https://my-prototype.vercel.app"
+               value="{{ report.target if report else '' }}" required>
+        <button type="submit">🔍 Scan now</button>
+      </div>
       <label class="consent">
         <input type="checkbox" name="consent" value="yes" checked>
         <span>I own this prototype or have permission to run a passive safety scan on it.</span>
       </label>
-      <button type="submit">Scan now</button>
       {% if report %}
-      <button type="button" class="btn-ghost" onclick="window.print()">Print / Save PDF</button>
-      <button type="button" class="btn-ghost" onclick="downloadJSON()">Download JSON</button>
+      <button type="button" class="btn-ghost" onclick="window.print()">🖨️ Print / Save PDF</button>
+      <button type="button" class="btn-ghost" onclick="downloadJSON()">⬇️ Download JSON</button>
       {% endif %}
     </form>
   </div>
@@ -83,7 +109,7 @@
   {% if report %}
   <div class="card">
     <span class="badge {{ report.level }}">{{ report.verdict }}</span>
-    <span style="color:var(--muted); margin-left:10px;">
+    <span class="counts">
       {{ report.fails }} FAIL · {{ report.warnings }} WARN · {{ report.passes }} PASS · score {{ report.score }}
     </span>
     <div class="meta">
@@ -95,9 +121,9 @@
       <div><small>Size</small>{{ report.content_kb }} KB</div>
       <div><small>TLS</small>{{ report.tls.version if report.tls and report.tls.version else 'n/a' }}</div>
     </div>
-    <p style="color:var(--muted); font-size:13px;">{{ report.note }}</p>
+    <p class="footer-note">{{ report.note }}</p>
     {% if report.redirect_chain %}
-    <p style="font-size:13px; color:var(--muted);">Redirects: {{ report.redirect_chain | join(' → ') }}</p>
+    <p class="footer-note">Redirects: {{ report.redirect_chain | join(' → ') }}</p>
     {% endif %}
   </div>
 
@@ -106,7 +132,7 @@
     {% for f in report.findings if f.category == cat %}
     <div class="finding {{ f.status }}">
       <span class="tag {{ f.status }}">{{ f.status }}</span><b>{{ f.name }}</b>
-      <div style="margin-top:4px;">{{ f.detail }}</div>
+      <div style="margin-top:6px; font-size:14px;">{{ f.detail }}</div>
       {% if f.status != 'PASS' %}<div class="fix">🛠️ Fix: {{ f.fix }}</div>{% endif %}
     </div>
     {% endfor %}
@@ -122,10 +148,10 @@
       {% endfor %}
     </ul>
     {% else %}
-    <p style="color:var(--muted);">No scans yet.</p>
+    <p class="footer-note">No scans yet.</p>
     {% endif %}
-    <p style="color:var(--muted); font-size:13px;">API: <code>GET /api/scan?url=https://...</code> ·
-       CLI: <code>python scanner.py https://...</code></p>
+    <p class="footer-note">API: <code class="inline">GET /api/scan?url=https://...</code> ·
+       CLI: <code class="inline">python scanner.py https://...</code></p>
   </div>
 </div>
 
