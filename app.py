@@ -5,6 +5,7 @@ from datetime import datetime, timezone
 from flask import Flask, request, jsonify, render_template
 
 from scanner import scan_url
+from fast_scanner import fast_scan_url, scan_urls
 
 app = Flask(__name__)
 BASE = os.path.dirname(os.path.abspath(__file__))
@@ -33,33 +34,99 @@ def save_history(entry, limit=20):
 
 
 @app.route("/", methods=["GET"])
+def landing():
+    return render_template("landing.html", history=load_history())
+
+
+@app.route("/scanner", methods=["GET"])
 def index():
-    return render_template("index.html", history=load_history(), report=None, error=None)
+    return render_template("scanner.html", history=load_history(),
+                           error=None, engine="standard", prefill="",
+                           active="scanner")
+
+
+@app.route("/history", methods=["GET"])
+def history_page():
+    return render_template("history.html", history=load_history(), active="history")
+
+
+@app.route("/api", methods=["GET"])
+def api_page():
+    return render_template("api.html", active="api")
+
+
+def _parse_urls(raw):
+    """Split merged scan-bar input into a clean URL list (one per line, commas OK)."""
+    return [line.strip() for line in (raw or "").replace(",", "\n").splitlines()
+            if line.strip()][:21]
+
+
+def _render(error=None, engine="standard", prefill=""):
+    return render_template("scanner.html", history=load_history(),
+                           error=error, engine=engine, prefill=prefill,
+                           active="scanner")
+
+
+def _run_scan(raw, consent, engine):
+    """Shared logic for the merged scan bar: 1 URL -> report page, N URLs -> bulk page."""
+    if not raw:
+        return _render(error="Paste a deployed link first (e.g. https://my-app.vercel.app).",
+                       engine=engine, prefill=raw)
+    if not consent:
+        return _render(error="Please confirm you own the prototype(s) or have permission to scan them.",
+                       engine=engine, prefill=raw)
+    urls = _parse_urls(raw)
+    if not urls:
+        return _render(error="Paste at least one URL (one per line for bulk).",
+                       engine=engine, prefill=raw)
+    if len(urls) > 20:
+        return _render(error="Bulk scan is capped at 20 links per batch.",
+                       engine=engine, prefill=raw)
+    if len(urls) == 1:
+        try:
+            report = fast_scan_url(urls[0]) if engine == "fast" else scan_url(urls[0])
+        except ValueError as e:
+            return _render(error=str(e), engine=engine, prefill=raw)
+        save_history({
+            "target": report.get("target"),
+            "verdict": report.get("verdict"),
+            "fails": report.get("fails"),
+            "warnings": report.get("warnings"),
+            "engine": report.get("engine", "standard"),
+            "time": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC"),
+        })
+        return render_template("report.html", report=report, active="scanner")
+    try:
+        batch = scan_urls(urls, max_workers=8)
+    except ValueError as e:
+        return _render(error=str(e), engine=engine, prefill=raw)
+    for r in batch["results"]:
+        save_history({
+            "target": r.get("target"),
+            "verdict": r.get("verdict"),
+            "fails": r.get("fails"),
+            "warnings": r.get("warnings"),
+            "engine": r.get("engine", "fast"),
+            "time": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC"),
+        })
+    return render_template("bulk.html", bulk=batch, active="scanner")
 
 
 @app.route("/scan", methods=["POST"])
 def scan():
-    url = (request.form.get("url") or "").strip()
+    raw = (request.form.get("urls") or request.form.get("url") or "").strip()
     consent = request.form.get("consent")
-    if not url:
-        return render_template("index.html", history=load_history(), report=None,
-                               error="Paste a deployed link first (e.g. https://my-app.vercel.app).")
-    if not consent:
-        return render_template("index.html", history=load_history(), report=None,
-                               error="Please confirm you own the prototype or have permission to scan it.")
-    try:
-        report = scan_url(url)
-    except ValueError as e:
-        return render_template("index.html", history=load_history(), report=None, error=str(e))
-    entry = {
-        "target": report.get("target"),
-        "verdict": report.get("verdict"),
-        "fails": report.get("fails"),
-        "warnings": report.get("warnings"),
-        "time": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC"),
-    }
-    hist = save_history(entry)
-    return render_template("index.html", history=hist, report=report, error=None)
+    engine = (request.form.get("engine") or "standard").strip().lower()
+    return _run_scan(raw, consent, engine)
+
+
+@app.route("/bulk", methods=["POST"])
+def bulk():
+    # Kept for backward compatibility (old form/bookmarks) — same merged logic.
+    raw = (request.form.get("urls") or request.form.get("url") or "").strip()
+    consent = request.form.get("consent") or request.form.get("consent_bulk")
+    engine = (request.form.get("engine") or "fast").strip().lower()
+    return _run_scan(raw, consent, engine)
 
 
 @app.route("/api/scan", methods=["GET"])
@@ -73,8 +140,35 @@ def api_scan():
         return jsonify({"error": str(e)}), 400
 
 
-@app.route("/history", methods=["GET"])
-def history():
+@app.route("/api/scan_fast", methods=["GET"])
+def api_scan_fast():
+    """High-efficiency single-URL scan (parallel probes + pooled connections)."""
+    url = (request.args.get("url") or "").strip()
+    if not url:
+        return jsonify({"error": "Missing ?url=https://..."}), 400
+    try:
+        return jsonify(fast_scan_url(url))
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 400
+
+
+@app.route("/api/scan_bulk", methods=["POST"])
+def api_scan_bulk():
+    """High-efficiency bulk scan. JSON body: {"urls": ["https://...", ...]} (max 20)."""
+    data = request.get_json(silent=True) or {}
+    urls = data.get("urls") or []
+    if isinstance(urls, str):
+        urls = [urls]
+    if not urls:
+        return jsonify({"error": 'Missing JSON body like {"urls": ["https://..."]}.'}), 400
+    try:
+        return jsonify(scan_urls(urls, max_workers=8))
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 400
+
+
+@app.route("/api/history", methods=["GET"])
+def api_history():
     return jsonify(load_history())
 
 

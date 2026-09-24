@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Prototype Safety Check — official passive web security scanner for deployed prototypes.">
+<title>{% block title %}Prototype Safety Check | Official Website{% endblock %}</title>
+<script>(function(){try{var t=localStorage.getItem('psc-theme');if(!t){t=(window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches)?'dark':'light';}document.documentElement.setAttribute('data-theme',t);}catch(e){document.documentElement.setAttribute('data-theme','light');}})();</script>
+<style>
+  :root, [data-theme="light"] {
+    color-scheme:light;
+    --bg:#eef2f6; --surface:#ffffff; --surface-2:#f5f8fb;
+    --text:#152a3c; --muted:#5a7183; --line:#d5dfe7;
+    --primary:#0f5cab; --primary-dark:#0a447f; --primary-ink:#ffffff;
+    --header-bg:#0d2c49; --header-text:#ffffff; --header-muted:#b9cfdf;
+    --notice-bg:#e3eef7; --notice-text:#0d2c49;
+    --green:#047857; --green-bg:#e6f4ee; --amber:#b45309; --amber-bg:#fdf1e0;
+    --red:#b91c1c; --red-bg:#fdecec; --info-bg:#e8f1f9;
+    --input-bg:#f7fafc; --placeholder:#8499a8; --code-bg:#eef3f7;
+    --shadow:0 1px 2px rgba(13,44,73,.08),0 8px 24px rgba(13,44,73,.08);
+    --radius:10px;
+  }
+  [data-theme="dark"] {
+    color-scheme:dark;
+    --bg:#000000; --surface:#101f2c; --surface-2:#0c1a26;
+    --text:#e6eff5; --muted:#93a9ba; --line:#223a4d;
+    --primary:#3d9be9; --primary-dark:#2b7fc4; --primary-ink:#06121c;
+    --header-bg:#0b1e2e; --header-text:#eef5fa; --header-muted:#9db4c6;
+    --notice-bg:#12293c; --notice-text:#cfe2f0;
+    --green:#34d399; --green-bg:rgba(52,211,153,.12); --amber:#fbbf24; --amber-bg:rgba(251,191,36,.12);
+    --red:#f87171; --red-bg:rgba(248,113,113,.12); --info-bg:#12293c;
+    --input-bg:#0b1a26; --placeholder:#5f7a8d; --code-bg:#0b1a26;
+    --shadow:0 10px 30px rgba(0,0,0,.4);
+    --radius:10px;
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; color:var(--text); background:var(--bg);
+         font-family:"Segoe UI",system-ui,-apple-system,Roboto,"Helvetica Neue",Arial,sans-serif;
+         font-size:15px; line-height:1.55; }
+  .container { max-width:100%; margin:0; padding:0 24px; }
+  a { color:var(--primary); }
+
+  /* ---------- header ---------- */
+  .site-header { background:var(--header-bg); color:var(--header-text); }
+  .header-inner { display:flex; align-items:center; gap:16px; padding:14px 20px; }
+  .brand { display:flex; align-items:center; gap:12px; margin-right:auto;
+    color:var(--header-text); text-decoration:none; }
+  .brand-mark { display:inline-flex; align-items:center; justify-content:center;
+    width:42px; height:42px; border-radius:9px; font-size:22px;
+    background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.25); }
+  .brand strong { display:block; font-size:17px; letter-spacing:.2px; }
+  .brand small { display:block; font-size:12px; color:var(--header-muted); letter-spacing:1.2px; text-transform:uppercase; }
+  .main-nav { display:flex; gap:4px; }
+  .main-nav a { color:var(--header-text); text-decoration:none; font-size:14px; font-weight:600;
+    padding:8px 14px; border-radius:7px; }
+  .main-nav a:hover { background:rgba(255,255,255,.12); }
+  .main-nav a.current { background:rgba(255,255,255,.18); }
+  .theme-toggle { background:transparent; color:var(--header-text);
+    border:1px solid rgba(255,255,255,.4); border-radius:999px; padding:7px 15px;
+    font-size:13px; font-weight:700; cursor:pointer; white-space:nowrap; }
+  .theme-toggle:hover { background:rgba(255,255,255,.12); }
+  .notice-bar { background:var(--notice-bg); color:var(--notice-text);
+    font-size:13px; border-top:1px solid rgba(255,255,255,.08); }
+  .notice-bar .container { padding-top:8px; padding-bottom:8px; }
+
+  /* ---------- page hero strip (per-page identity) ---------- */
+  .page-hero { padding:30px 0 4px; }
+  .page-hero .kicker { display:inline-block; font-size:12px; font-weight:800; letter-spacing:1.6px;
+    text-transform:uppercase; color:var(--primary); margin-bottom:6px; }
+  .page-hero h1 { margin:0 0 6px; font-size:32px; letter-spacing:-.4px; }
+  .page-hero p { margin:0; color:var(--muted); font-size:15px; max-width:72ch; }
+  .page-hero.scan-page { border-left:6px solid var(--primary); padding-left:18px; }
+  .page-hero.report-page { border-left:6px solid var(--green); padding-left:18px; }
+  .page-hero.bulk-page { border-left:6px solid var(--amber); padding-left:18px; }
+  .page-hero.history-page { border-left:6px solid var(--primary); padding-left:18px; }
+  .page-hero.api-page { border-left:6px solid var(--primary); padding-left:18px; }
+
+  /* ---------- cards / forms ---------- */
+  .card { background:var(--surface); border:1px solid var(--line); border-radius:12px;
+          box-shadow:var(--shadow); padding:22px; margin:20px 0; }
+  .card h2 { margin:0 0 4px; font-size:20px; }
+  .card .sub { margin:0 0 14px; color:var(--muted); font-size:14px; }
+  label.field-label { display:block; font-weight:700; font-size:14px; margin:0 0 6px; }
+  textarea.scan-input { width:100%; min-height:44px; height:44px; padding:10px 14px; font-size:15px;
+    font-family:inherit; color:var(--text); background:var(--input-bg);
+    border:1px solid var(--line); border-radius:8px; resize:vertical; }
+  textarea.scan-input:focus { outline:2px solid var(--primary); outline-offset:0; border-color:var(--primary); }
+  textarea.scan-input::placeholder { color:var(--placeholder); }
+  .form-row { display:flex; gap:12px; align-items:center; flex-wrap:wrap; margin-top:12px; }
+  .engine-group { display:inline-flex; border:1px solid var(--line); border-radius:8px; overflow:hidden; }
+  .engine-group label { padding:9px 16px; font-size:14px; font-weight:600; cursor:pointer;
+    color:var(--muted); background:var(--surface); }
+  .engine-group label:has(input:checked) { background:var(--primary); color:var(--primary-ink); }
+  .engine-group input { accent-color:var(--primary); margin-right:6px; }
+  .consent { display:flex; gap:9px; align-items:flex-start; font-size:13.5px; color:var(--muted); margin:12px 0; }
+  .consent input { margin-top:4px; accent-color:var(--primary); }
+  .btn { display:inline-block; border:0; border-radius:8px; padding:12px 26px;
+         font-size:15px; font-weight:700; cursor:pointer; text-decoration:none;
+         background:var(--primary); color:var(--primary-ink); }
+  .btn:hover { background:var(--primary-dark); }
+  [data-theme="dark"] .btn:hover { color:#fff; }
+  .btn-outline { background:transparent; color:var(--primary); border:1px solid var(--primary);
+    border-radius:8px; padding:10px 18px; font-size:14px; font-weight:700; cursor:pointer; margin:4px 8px 0 0; }
+  .btn-outline:hover { background:var(--info-bg); }
+  .alert-error { border:1px solid var(--red); background:var(--red-bg); color:var(--red);
+    border-radius:8px; padding:12px 16px; margin:16px 0; font-weight:600; }
+
+  /* ---------- verdict ---------- */
+  .verdict { display:flex; gap:14px; align-items:center; flex-wrap:wrap;
+    border-radius:8px; padding:14px 18px; margin-bottom:16px;
+    border:1px solid var(--line); border-left-width:6px; }
+  .verdict.safe { border-left-color:var(--green); background:var(--green-bg); }
+  .verdict.risky { border-left-color:var(--amber); background:var(--amber-bg); }
+  .verdict.critical { border-left-color:var(--red); background:var(--red-bg); }
+  .verdict.error { border-left-color:var(--primary); background:var(--info-bg); }
+  .verdict .grade { font-size:22px; font-weight:800; }
+  .verdict.safe .grade { color:var(--green); } .verdict.risky .grade { color:var(--amber); }
+  .verdict.critical .grade { color:var(--red); }
+  .verdict.error .grade { color:var(--primary); }
+  .verdict .tallies { color:var(--muted); font-size:14px; }
+  .meta-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px; margin:6px 0 4px; }
+  .meta-grid div { background:var(--surface-2); border:1px solid var(--line);
+    border-radius:8px; padding:9px 12px; font-size:13.5px; overflow-wrap:anywhere; }
+  .meta-grid small { display:block; font-size:11px; font-weight:800; letter-spacing:.8px;
+    text-transform:uppercase; color:var(--primary); margin-bottom:2px; }
+  .note { font-size:13.5px; color:var(--muted); }
+
+  /* ---------- findings ---------- */
+  .section-title { font-size:19px; margin:28px 0 4px; padding-bottom:8px;
+    border-bottom:2px solid var(--primary); }
+  .finding { border:1px solid var(--line); border-radius:8px; background:var(--surface);
+    padding:13px 16px; margin:10px 0; border-left-width:6px; }
+  .finding.PASS { border-left-color:var(--green); }
+  .finding.WARNING { border-left-color:var(--amber); }
+  .finding.FAIL { border-left-color:var(--red); }
+  .finding-head { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+  .status { font-size:11.5px; font-weight:800; letter-spacing:.6px; padding:3px 11px; border-radius:999px; }
+  .status.PASS { background:var(--green-bg); color:var(--green); border:1px solid var(--green); }
+  .status.WARNING { background:var(--amber-bg); color:var(--amber); border:1px solid var(--amber); }
+  .status.FAIL { background:var(--red-bg); color:var(--red); border:1px solid var(--red); }
+  .finding-detail { margin:8px 0 0; font-size:14.5px; }
+  .finding-fix { margin:10px 0 0; font-size:13.5px; background:var(--info-bg);
+    border:1px solid var(--line); border-left:4px solid var(--primary);
+    border-radius:0 8px 8px 0; padding:9px 12px; }
+
+  /* ---------- tables ---------- */
+  table.data { width:100%; border-collapse:collapse; font-size:14px; margin-top:12px; }
+  table.data th { text-align:left; font-size:12px; text-transform:uppercase; letter-spacing:.8px;
+    color:var(--primary-ink); background:var(--primary); padding:10px 12px; }
+  table.data th:first-child { border-radius:8px 0 0 0; } table.data th:last-child { border-radius:0 8px 0 0; }
+  table.data td { padding:10px 12px; border-bottom:1px solid var(--line); overflow-wrap:anywhere; }
+  table.data tr:last-child td { border-bottom:0; }
+
+  /* ---------- pills / api / footer ---------- */
+  .pill { display:inline-block; font-size:11.5px; font-weight:800; padding:2px 10px;
+    border-radius:999px; margin-right:6px; }
+  .pill.safe { background:var(--green-bg); color:var(--green); }
+  .pill.risky { background:var(--amber-bg); color:var(--amber); }
+  .pill.critical { background:var(--red-bg); color:var(--red); }
+  .pill.error { background:var(--info-bg); color:var(--primary); }
+  .time { color:var(--muted); font-size:13px; }
+  pre.api { background:var(--code-bg); border:1px solid var(--line); border-radius:8px;
+    padding:12px 14px; font-size:13.5px; overflow-x:auto; }
+  pre.api code, code.inline { color:var(--primary); }
+  .next-links { display:flex; gap:10px; flex-wrap:wrap; margin:18px 0 0; }
+  .site-footer { border-top:3px solid var(--primary); margin-top:36px;
+    background:var(--surface); }
+  .footer-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+    gap:20px; padding:26px 20px; }
+  .site-footer h4 { margin:0 0 8px; font-size:14px; text-transform:uppercase; letter-spacing:1px; }
+  .site-footer p, .site-footer li { font-size:13.5px; color:var(--muted); }
+  .site-footer ul { margin:0; padding-left:18px; }
+  .footer-base { border-top:1px solid var(--line); font-size:12.5px; color:var(--muted); }
+  .footer-base .container { padding-top:12px; padding-bottom:16px; }
+
+  @media (max-width:760px){
+    .container { padding:0 16px; }
+    .main-nav { display:none; } .form-row .btn { width:100%; }
+    .page-hero h1 { font-size:26px; }
+  }
+  @media print {
+    .site-header, .site-footer, .no-print { display:none !important; }
+    body { background:#fff; } .card { box-shadow:none; }
+  }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="container header-inner">
+    <a class="brand" href="/">
+      <span class="brand-mark">🛡️</span>
+      <div><strong>Prototype Safety Check</strong><small>Official Web Security Scanner</small></div>
+    </a>
+    <nav class="main-nav no-print" aria-label="Primary">
+      <a href="/" class="{% if active == 'home' %}current{% endif %}">Home</a>
+      <a href="/scanner" class="{% if active == 'scanner' %}current{% endif %}">Scanner</a>
+      <a href="/history" class="{% if active == 'history' %}current{% endif %}">History</a>
+      <a href="/api" class="{% if active == 'api' %}current{% endif %}">Interface</a>
+    </nav>
+    <button type="button" id="theme-toggle" class="theme-toggle" onclick="toggleTheme()">🌙 Dark</button>
+  </div>
+  <div class="notice-bar"><div class="container">
+    <strong>Official notice:</strong> this is a <strong>passive</strong> scanner — one page request plus safe
+    header, transport security and domain name checks. No attacks are sent. Only scan websites you own or have written permission to test.
+    Repository links (GitHub / GitLab / Bitbucket) are not accepted; submit the deployed live link.
+  </div></div>
+</header>
+
+<main class="container">
+{% block content %}{% endblock %}
+</main>
+
+<footer class="site-footer">
+  <div class="container footer-grid">
+    <div>
+      <h4>About this service</h4>
+      <p>Prototype Safety Check is an official passive examination tool for deployed prototypes.
+        It performs read-only checks and never attempts exploitation.</p>
+    </div>
+    <div>
+      <h4>Scope of examination</h4>
+      <ul>
+        <li>Transport security and encryption configuration</li>
+        <li>Injection, scripting &amp; content-security posture</li>
+        <li>Malware indicators &amp; phishing resemblance</li>
+      </ul>
+    </div>
+    <div>
+      <h4>Legal notice</h4>
+      <p>Use of this service constitutes confirmation that you own each submitted website or hold
+        the owner's written permission. Results are advisory and do not certify absolute security.</p>
+    </div>
+  </div>
+  <div class="footer-base"><div class="container">
+    Prototype Safety Check · Official Website · Passive examination only · MIT Licence
+  </div></div>
+</footer>
+
+{% block scripts %}{% endblock %}
+<script>
+function paintThemeButton(){
+  var b = document.getElementById('theme-toggle');
+  if (!b) return;
+  var t = document.documentElement.getAttribute('data-theme') || 'light';
+  b.textContent = (t === 'dark') ? '☀️ Light' : '🌙 Dark';
+}
+function toggleTheme(){
+  var cur = document.documentElement.getAttribute('data-theme') || 'light';
+  var next = (cur === 'dark') ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  try { localStorage.setItem('psc-theme', next); } catch (e) {}
+  paintThemeButton();
+}
+paintThemeButton();
+</script>
+</body>
+</html>

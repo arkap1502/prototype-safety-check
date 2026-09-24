@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}Examination Report — {{ report.target }} | Prototype Safety Check{% endblock %}
+{% block content %}
+  <section class="page-hero report-page">
+    <span class="kicker">Step 2 · Findings</span>
+    <h1>Examination report</h1>
+    <p>Clause-by-clause findings for the submitted link, with a recommended action for every non-passing check.</p>
+  </section>
+
+  <section class="card" aria-labelledby="report-heading">
+    <h2 id="report-heading" style="display:none;">Report</h2>
+    <div class="verdict {{ report.level }}">
+      <span class="grade">{{ report.verdict }}</span>
+      <span class="tallies">{{ report.fails }} failed · {{ report.warnings }} warnings · {{ report.passes }} passed · score {{ report.score }}{% if report.scan_time_s is not none %} · examined in {{ report.scan_time_s }}s{% endif %}{% if report.engine %} · {{ report.engine }} engine{% endif %}{% if report.cached %} · served from cache{% endif %}</span>
+    </div>
+    <div class="meta-grid">
+      <div><small>Target</small>{{ report.target }}</div>
+      <div><small>Final Link</small>{{ report.final_url }}</div>
+      <div><small>Response Status</small>{{ report.status_code }}</div>
+      <div><small>Response Time</small>{{ report.response_time_s }}s</div>
+      <div><small>Server</small>{{ report.server }}</div>
+      <div><small>Content Size</small>{{ report.content_kb }} KB</div>
+      <div><small>Transport Layer Security Version</small>{{ report.tls.version if report.tls and report.tls.version else 'n/a' }}</div>
+    </div>
+    <p class="note">{{ report.note }}</p>
+    {% if report.redirect_chain %}
+    <p class="note"><strong>Redirect chain:</strong> {{ report.redirect_chain | join(' → ') }}</p>
+    {% endif %}
+
+    {% for cat in ['MitM','XSS','SQLi','Malware','Phishing','DoS'] %}
+      <h3 class="section-title">{{ {'MitM':'Clause A — Man-in-the-Middle (Transport Security)','XSS':'Clause B — Cross-Site Scripting','SQLi':'Clause C — SQL Injection','Malware':'Clause D — Malware & Viruses','Phishing':'Clause E — Phishing & Spoofing','DoS':'Clause F — Denial-of-Service Exposure'}[cat] }}</h3>
+      {% for f in report.findings if f.category == cat %}
+      <div class="finding {{ f.status }}">
+        <div class="finding-head"><span class="status {{ f.status }}">{{ f.status }}</span><strong>{{ f.name }}</strong></div>
+        <p class="finding-detail">{{ f.detail }}</p>
+        {% if f.status != 'PASS' %}<p class="finding-fix"><strong>Recommended action:</strong> {{ f.fix }}</p>{% endif %}
+      </div>
+      {% endfor %}
+    {% endfor %}
+
+    <div class="next-links no-print">
+      <button type="button" class="btn-outline" onclick="window.print()">Print / Save Report Document</button>
+      <button type="button" class="btn-outline" onclick="downloadJSON()">Download Report (Data File)</button>
+      <a class="btn" href="/scanner" style="text-decoration:none;">Scan another link</a>
+      <a class="btn-outline" href="/history" style="text-decoration:none;">View register →</a>
+    </div>
+  </section>
+{% endblock %}
+{% block scripts %}
+<script id="report-data" type="application/json">
+{{ report | tojson }}
+</script>
+<script>
+const REPORT = JSON.parse(document.getElementById('report-data').textContent);
+function downloadJSON(){
+  const blob = new Blob([JSON.stringify(REPORT, null, 2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'safety-report.json';
+  a.click();
+}
+</script>
+{% endblock %}

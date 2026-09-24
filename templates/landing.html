@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Prototype Safety Check — passive safety scanner for deployed prototypes. Safe, Risky or Critical verdict with fixes.">
+<title>Prototype Safety Check — Passive Safety Scanner for Deployed Prototypes</title>
+<script>(function(){try{var t=localStorage.getItem('psc-theme');if(!t){t=(window.matchMedia&&matchMedia('(prefers-color-scheme: light)').matches)?'light':'dark';}document.documentElement.setAttribute('data-theme',t);}catch(e){document.documentElement.setAttribute('data-theme','dark');}})();</script>
+<style>
+  :root, [data-theme="dark"] {
+    color-scheme:dark;
+    --bg:#000000; --bg-soft:#0a0f16; --surface:rgba(255,255,255,.04);
+    --text:#f2f6fa; --muted:#9aaebd; --line:rgba(255,255,255,.12);
+    --grad-a:#5cf2b8; --grad-b:#4cc9f0; --grad-c:#b388ff;
+    --pill-bg:rgba(255,255,255,.06); --pill-border:rgba(255,255,255,.14);
+    --card-border:rgba(255,255,255,.1);
+    --glow-1:rgba(76,201,240,.16); --glow-2:rgba(179,136,255,.12); --glow-3:rgba(92,242,184,.1);
+    --btn-ink:#06121c; --nav-ink:#f2f6fa;
+  }
+  [data-theme="light"] {
+    color-scheme:light;
+    --bg:#f4f7fa; --bg-soft:#ffffff; --surface:#ffffff;
+    --text:#10262f; --muted:#4d6f7a; --line:#d5dfe7;
+    --grad-a:#059669; --grad-b:#0f5cab; --grad-c:#7c3aed;
+    --pill-bg:#ffffff; --pill-border:#d5dfe7;
+    --card-border:#d5dfe7;
+    --glow-1:rgba(15,92,171,.08); --glow-2:rgba(124,58,237,.07); --glow-3:rgba(5,150,105,.07);
+    --btn-ink:#ffffff; --nav-ink:#10262f;
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; color:var(--text); background:var(--bg);
+    font-family:"Segoe UI",system-ui,-apple-system,Roboto,"Helvetica Neue",Arial,sans-serif; }
+  .wrap { max-width:100%; padding:0 28px; }
+
+  /* ---------- floating pill navbar (like reference) ---------- */
+  .nav-float { position:sticky; top:14px; z-index:50; margin:18px auto 0; max-width:1100px;
+    display:flex; align-items:center; gap:8px; padding:10px 12px 10px 22px;
+    background:var(--pill-bg); border:1px solid var(--pill-border); border-radius:999px;
+    backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px); }
+  .brand { font-size:19px; font-weight:800; letter-spacing:.2px; margin-right:auto;
+    text-decoration:none; color:var(--nav-ink); }
+  .brand span { background:linear-gradient(90deg,var(--grad-a),var(--grad-b));
+    -webkit-background-clip:text; background-clip:text; color:transparent; }
+  .nav-links { display:flex; gap:26px; }
+  .nav-links a { color:var(--muted); text-decoration:none; font-size:14.5px; font-weight:600; }
+  .nav-links a:hover { color:var(--text); }
+  .nav-cta { display:flex; gap:10px; align-items:center; }
+  .ghost { color:var(--muted); text-decoration:none; font-size:14px; font-weight:600; padding:9px 12px; }
+  .ghost:hover { color:var(--text); }
+  .btn-get { text-decoration:none; font-size:14px; font-weight:800; color:#06121c;
+    background:linear-gradient(90deg,var(--grad-a),var(--grad-b),var(--grad-c));
+    padding:10px 22px; border-radius:999px; }
+  .theme-mini { background:transparent; border:1px solid var(--pill-border); color:var(--muted);
+    border-radius:999px; padding:8px 13px; font-size:13px; cursor:pointer; }
+
+  /* ---------- hero ---------- */
+  .hero { position:relative; text-align:center; overflow:hidden;
+    padding:88px 20px 70px; margin:26px auto 0; max-width:1200px; border-radius:28px;
+    background:
+      radial-gradient(700px 340px at 15% 20%, var(--glow-1), transparent 65%),
+      radial-gradient(700px 340px at 85% 25%, var(--glow-2), transparent 65%),
+      radial-gradient(900px 420px at 50% 100%, var(--glow-3), transparent 65%),
+      var(--bg-soft);
+    border:1px solid var(--card-border); }
+  .hero::before, .hero::after { content:""; position:absolute; border:1px solid var(--line);
+    border-radius:50%; pointer-events:none; }
+  .hero::before { width:520px; height:520px; right:-160px; top:-160px; }
+  .hero::after { width:380px; height:380px; left:-120px; bottom:-140px; }
+  .kicker { display:inline-block; font-size:12.5px; font-weight:800; letter-spacing:2.4px;
+    text-transform:uppercase; color:var(--muted);
+    border:1px solid var(--pill-border); border-radius:999px; padding:7px 18px;
+    background:var(--surface); margin-bottom:26px; }
+  .hero h1 { margin:0; font-weight:900; letter-spacing:-1px; line-height:1.02; }
+  .hero h1 .l1 { display:block; font-size:clamp(44px,8vw,104px);
+    background:linear-gradient(92deg,var(--grad-a) 5%,var(--grad-b) 45%,var(--text) 90%);
+    -webkit-background-clip:text; background-clip:text; color:transparent; }
+  .hero h1 .l2 { display:block; font-size:clamp(40px,7.4vw,96px); color:var(--text); }
+  .hero h1 .l3 { display:block; font-size:clamp(40px,7.4vw,96px); font-weight:300; color:var(--text); }
+  .hero h1 .l3 b { font-weight:900;
+    background:linear-gradient(92deg,var(--grad-b),var(--grad-c));
+    -webkit-background-clip:text; background-clip:text; color:transparent; }
+  .cta-row { display:flex; gap:14px; justify-content:center; flex-wrap:wrap; margin:36px 0 26px; }
+  .cta-primary { text-decoration:none; font-weight:800; font-size:15.5px; color:#06121c;
+    background:linear-gradient(90deg,var(--grad-a),var(--grad-b),var(--grad-c));
+    padding:15px 34px; border-radius:999px; }
+  .cta-secondary { text-decoration:none; font-weight:700; font-size:15.5px; color:var(--text);
+    border:1px solid var(--pill-border); background:var(--surface);
+    padding:15px 34px; border-radius:999px; }
+  .hero-sub { max-width:620px; margin:0 auto; color:var(--muted); font-size:16px; line-height:1.65; }
+  .hero-sub strong { color:var(--text); }
+
+  /* ---------- sections ---------- */
+  section.block { max-width:1100px; margin:0 auto; padding:64px 0 8px; }
+  .sec-kicker { font-size:12.5px; font-weight:800; letter-spacing:2.2px; text-transform:uppercase;
+    color:var(--grad-b); }
+  .sec-title { font-size:clamp(26px,3.6vw,38px); margin:8px 0 10px; letter-spacing:-.5px; }
+  .sec-sub { color:var(--muted); max-width:64ch; margin:0 0 26px; font-size:15.5px; }
+  .grid-3 { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
+  .grid-2 { display:grid; grid-template-columns:repeat(2,1fr); gap:16px; }
+  .tile { background:var(--surface); border:1px solid var(--card-border); border-radius:16px; padding:22px; }
+  .tile .icon { font-size:26px; }
+  .tile h3 { margin:10px 0 6px; font-size:17px; }
+  .tile p { margin:0; color:var(--muted); font-size:14.5px; }
+  .tile .step-no { font-size:13px; font-weight:800; color:var(--grad-b); letter-spacing:1.5px; }
+  .verdict-safe { border-top:4px solid #22c55e; } .verdict-risky { border-top:4px solid #f59e0b; }
+  .verdict-critical { border-top:4px solid #ef4444; }
+  .tile .grade { font-size:24px; font-weight:900; }
+
+  /* ---------- closing CTA + footer ---------- */
+  .closing { text-align:center; max-width:1100px; margin:64px auto 0; padding:56px 24px;
+    border:1px solid var(--card-border); border-radius:24px;
+    background:linear-gradient(180deg,var(--surface),transparent); }
+  .closing h2 { font-size:clamp(26px,4vw,42px); margin:0 0 10px; letter-spacing:-.5px; }
+  .closing p { color:var(--muted); margin:0 0 26px; }
+  footer { border-top:1px solid var(--card-border); margin-top:56px; }
+  footer .wrap { display:flex; gap:18px; align-items:center; justify-content:space-between;
+    flex-wrap:wrap; padding-top:22px; padding-bottom:26px; color:var(--muted); font-size:13.5px; }
+  footer a { color:var(--muted); text-decoration:none; margin-left:18px; }
+  footer a:hover { color:var(--text); }
+
+  @media (max-width:820px){
+    .nav-links { display:none; } .ghost { display:none; }
+    .grid-3, .grid-2 { grid-template-columns:1fr; }
+    .hero { padding:64px 16px 52px; } .wrap { padding:0 16px; }
+  }
+</style>
+</head>
+<body>
+
+<nav class="nav-float" aria-label="Primary">
+  <a class="brand" href="/">🛡️ PS<span>Check</span></a>
+  <div class="nav-links">
+    <a href="/">Home</a>
+    <a href="/scanner">Scanner</a>
+    <a href="#checks">Checks</a>
+    <a href="#how">Process</a>
+    <a href="/api">Interface</a>
+  </div>
+  <div class="nav-cta">
+    <button type="button" class="theme-mini" id="theme-toggle" onclick="toggleTheme()">🌙</button>
+    <a class="ghost" href="/history">Reports</a>
+    <a class="btn-get" href="/scanner#scan">Get Started</a>
+  </div>
+</nav>
+
+<div class="wrap">
+<header class="hero">
+  <span class="kicker">Passive examination · No attacks ever sent</span>
+  <h1>
+    <span class="l1">Prototype-Leading</span>
+    <span class="l2">SAFETY SCANNING</span>
+    <span class="l3">Powered <b>by AI</b></span>
+  </h1>
+  <div class="cta-row">
+    <a class="cta-primary" href="/scanner#scan">Free Safety Scan</a>
+    <a class="cta-secondary" href="#how">How It Works</a>
+  </div>
+  <p class="hero-sub">Paste a <strong>deployed link</strong> and stop risks before they spread —
+    a <strong>Safe, Risky or Critical</strong> verdict with fixes for SQLi, XSS, malware,
+    phishing, DoS and MitM. Think of it as your all-in-one prototype defense checkpoint.</p>
+</header>
+
+<section class="block" id="checks">
+  <div class="sec-kicker">What it examines</div>
+  <h2 class="sec-title">Six threat clauses, one report</h2>
+  <p class="sec-sub">One page request plus safe header, transport security and domain name probes — repo links are refused,
+    payloads are never sent, logins are never attempted.</p>
+  <div class="grid-3">
+    <div class="tile"><div class="icon">💉</div><h3>SQL Injection</h3><p>Exposed database errors, input surfaces and client-built query hints — reviewed passively.</p></div>
+    <div class="tile"><div class="icon">✨</div><h3>Cross-Site Scripting</h3><p>Missing content-security policy, reflected input and unsafe innerHTML / eval sinks.</p></div>
+    <div class="tile"><div class="icon">🦠</div><h3>Malware &amp; Viruses</h3><p>Obfuscated scripts, hidden iframes, forced downloads and shady script hosts.</p></div>
+    <div class="tile"><div class="icon">🎣</div><h3>Phishing &amp; Spoofing</h3><p>Lookalike domains, brand-keyword squatting, unsafe login forms and mail-auth gaps.</p></div>
+    <div class="tile"><div class="icon">🌊</div><h3>DoS Exposure</h3><p>Slow origins, missing rate-limit signals, absent CDN shields and heavy payloads.</p></div>
+    <div class="tile"><div class="icon">🔒</div><h3>Man-in-the-Middle</h3><p>Encrypted connection enforcement, strict transport security, security protocol version, downgrades, mixed content and cookie flags.</p></div>
+  </div>
+</section>
+
+<section class="block" id="how">
+  <div class="sec-kicker">Work process</div>
+  <h2 class="sec-title">From link to verdict in seconds</h2>
+  <p class="sec-sub">Scan one link for the full clause-by-clause report, or up to 20 links at once with the high-efficiency concurrent engine.</p>
+  <div class="grid-3">
+    <div class="tile"><div class="step-no">STEP 01</div><h3>Submit your link</h3><p>Paste the deployed live link and confirm you own it or hold permission to test it.</p></div>
+    <div class="tile"><div class="step-no">STEP 02</div><h3>Passive examination</h3><p>A single page fetch plus parallel transport security, redirect and domain name probes. Nothing is attacked.</p></div>
+    <div class="tile"><div class="step-no">STEP 03</div><h3>Verdict &amp; fixes</h3><p>Safe, Risky or Critical — every failing check ships with a concrete remedial action.</p></div>
+  </div>
+</section>
+
+<section class="block" id="verdicts">
+  <div class="sec-kicker">Assessment scale</div>
+  <h2 class="sec-title">Know exactly where you stand</h2>
+  <div class="grid-3">
+    <div class="tile verdict-safe"><div class="grade">Safe</div><p>No failures and no warnings. Ship it — rescan after each deployment.</p></div>
+    <div class="tile verdict-risky"><div class="grade">Risky</div><p>Issues to fix before sharing: missing headers, weak transport, exposed inputs.</p></div>
+    <div class="tile verdict-critical"><div class="grade">Critical</div><p>Do not share publicly. Critical transport, malware or credential-theft exposure found.</p></div>
+  </div>
+</section>
+
+<div class="closing">
+  <h2>Is your prototype safe to share?</h2>
+  <p>Run the free examination now — full report, printable document and data file included.</p>
+  <div class="cta-row" style="margin:0;">
+    <a class="cta-primary" href="/scanner#scan">Free Safety Scan</a>
+    <a class="cta-secondary" href="/api">View Interface Docs</a>
+  </div>
+</div>
+</div>
+
+<footer>
+  <div class="wrap">
+    <span>🛡️ Prototype Safety Check · Passive examination only · Only test sites you own or may test</span>
+    <span><a href="/scanner">Scanner</a><a href="/history">Reports</a><a href="/api">Interface</a></span>
+  </div>
+</footer>
+
+<script>
+function paintThemeButton(){
+  var b = document.getElementById('theme-toggle');
+  if (!b) return;
+  var t = document.documentElement.getAttribute('data-theme') || 'dark';
+  b.textContent = (t === 'dark') ? '☀️' : '🌙';
+}
+function toggleTheme(){
+  var cur = document.documentElement.getAttribute('data-theme') || 'dark';
+  var next = (cur === 'dark') ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  try { localStorage.setItem('psc-theme', next); } catch (e) {}
+  paintThemeButton();
+}
+paintThemeButton();
+</script>
+</body>
+</html>

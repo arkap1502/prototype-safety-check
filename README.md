@@ -1,37 +1,108 @@
-# Prototype Safety Check
+# 🛡️ Prototype Safety Check
 
 Check if a user-made and deployed prototype is safe or not.
 
-This tool only checks **deployed links** (live URLs like `https://my-app.vercel.app`).
-It does **not** check repo links (GitHub / GitLab / source code).
+Paste a **deployed link** (live URL like `https://my-app.vercel.app`) and get a
+**Safe / Risky / Critical** report with reasons + fixes.
+Repo links (GitHub / GitLab / source code) are **not** scanned.
 
-## What it checks
+## ✨ Features
+
+- 🌐 Web UI with AI-neon dark theme — paste link, scan, view report
+- 📊 Verdict engine: Safe / Risky / Critical + score (FAIL = 2 pts, WARNING = 1 pt)
+- 🛠️ Fix suggestion for every failing check
+- 🕘 Re-scan history (stored in `history.json`)
+- 🖨️ Print / Save-as-PDF + ⬇️ JSON report download
+- 💻 CLI (`python scanner.py <url>`) and JSON API (`GET /api/scan?url=...`)
+- ⚡ High-efficiency engine (`fast_scanner.py`) — parallel TLS/DNS probes,
+  pooled connections, 5-min cache + concurrent bulk scan (up to 20 URLs):
+  Web UI toggle, `POST /bulk`, `GET /api/scan_fast?url=...`,
+  `POST /api/scan_bulk {"urls": [...]}`, CLI `python fast_scanner.py <url...>`
+
+## 🔍 What it checks
 
 1. **SQL Injection (SQLi)**
-   - Checks for exposed input params, error messages, insecure query patterns in responses.
+   - Exposed DB error strings, input params / forms, client-built query hints.
+   - Passive only — no payloads are ever sent.
 
 2. **Cross-Site Scripting (XSS)**
-   - Checks for reflected input, missing `Content-Security-Policy`, missing `X-XSS-Protection`, unsafe `innerHTML` usage in client JS.
+   - Reflected input, missing `Content-Security-Policy`, missing
+     `X-Content-Type-Options` / `X-Frame-Options` / `Referrer-Policy`,
+     unsafe `innerHTML` / `eval` / `document.write` sinks in inline JS.
 
 3. **Malware and Viruses**
-   - Checks URL against safe-browsing / blocklists, scans for suspicious scripts, iframes, obfuscated JS, forced downloads.
+   - Obfuscated script patterns (`eval(atob(...))`), hidden iframes,
+     forced downloads / executable links, scripts from IP or shady-TLD hosts.
 
 4. **Phishing and Spoofing**
-   - Checks domain spoof signals, missing SPF/DKIM/DMARC hints, misleading brand keywords, no HTTPS, fake login forms.
+   - Punycode / IP hosts, `@` tricks, excessive subdomains, brand-keyword
+     squatting, fake login forms, missing HTTPS, SPF/DMARC hints (via DNS-over-HTTPS).
 
 5. **Denial of Service (DoS / DDoS) exposure**
-   - Checks for missing rate-limit headers, slow responses, no CDN / WAF headers, oversized assets that amplify abuse.
+   - Slow responses, missing rate-limit headers, no CDN/WAF hints,
+     oversized / uncompressed payloads. Single GET only — no load testing.
 
 6. **Man-in-the-Middle (MitM)**
-   - Checks HTTPS enforcement, HSTS, TLS version, insecure redirects (https -> http), mixed-content, missing `Secure` cookies.
+   - HTTPS enforcement + HTTP→HTTPS redirect, HSTS, TLS version,
+     HTTPS→HTTP downgrades, mixed content, `Secure` cookie flags.
 
-## How to use
+## 🚫 What it does NOT do
 
-1. Deploy your prototype (Vercel, Netlify, Render, etc.)
-2. Paste the deployed link into the checker
-3. Get a Safety Report: Safe / Risky / Critical + reasons + fixes
+- No repo / source code scanning
+- No active exploitation (no SQLi payloads, no XSS firing, no DoS attack)
+- No login bypass, no brute-force
+- Only passive + safe light checks
 
-Example:
+⚠️ Only scan prototypes you own or have permission to test.
+
+## ▶️ Run locally
+
+```bash
+pip install -r requirements.txt
+
+# Web UI
+python app.py
+# open http://127.0.0.1:5000
+
+# CLI
+python scanner.py https://my-prototype.vercel.app
+
+# JSON API (with server running)
+# GET /api/scan?url=https://my-prototype.vercel.app
+```
+
+## 🚀 Deploy (Render)
+
+This is a Python Flask backend — deploy on **Render** or **Railway**
+(not Vercel/Netlify, which are static-only).
+
+- Build command: `pip install -r requirements.txt`
+- Start command: `gunicorn app:app --bind 0.0.0.0:$PORT --workers 2 --timeout 60`
+- `render.yaml` + `Procfile` are already included, so Render auto-detects them.
+
+## 🗂️ Project structure
+
+```
+app.py            # Flask web UI + API (landing, scanner, report, bulk, history, api pages)
+scanner.py        # Passive scanner (all 6 check categories)
+fast_scanner.py   # High-efficiency engine: parallel probes + bulk scan_urls()
+templates/
+  landing.html    # Opening page (hero)
+  base.html       # Shared official layout (header/nav/footer/theme)
+  scanner.html    # Scan submission page
+  report.html     # Single-URL examination report page
+  bulk.html       # Bulk examination outcome page
+  history.html    # Register of examinations page
+  api.html        # Machine interface docs page
+requirements.txt  # requests, flask, gunicorn
+Procfile          # web: gunicorn app:app ...
+render.yaml       # Render deploy config
+history.json      # created at runtime (last 20 scans)
+LICENSE           # MIT
+```
+
+## 📁 Example report
+
 ```
 Input: https://my-prototype.vercel.app
 Output:
@@ -43,39 +114,6 @@ Output:
 - Verdict: Risky (2 issues to fix)
 ```
 
-## What it does NOT do
+## 📄 License
 
-- No repo / source code scanning
-- No active exploitation (no real SQLi payload attack, no DoS attack)
-- No login bypass, no brute-force
-- Only passive + safe light checks with user permission
-
-Only scan prototypes you own or have permission to test.
-
-## Run it
-
-```bash
-pip install -r requirements.txt
-
-# Option 1: Web UI (paste link + report + history)
-python app.py
-# open http://127.0.0.1:5000
-
-# Option 2: CLI
-python scanner.py https://my-prototype.vercel.app
-
-# Option 3: JSON API
-# GET /api/scan?url=https://my-prototype.vercel.app
-```
-
-Print / Save-as-PDF is built into the report page (browser print).
-Re-scan history is stored in `history.json`. Each finding includes a fix suggestion.
-
-## Project status
-
-Working prototype: passive scanner + web UI + CLI + API done.
-
-Future scope:
-- PDF report export (1-click, currently via browser print)
-- Safe-browsing API integration (needs API key)
-- Fix suggestions with code snippets per framework
+MIT — see [LICENSE](LICENSE).

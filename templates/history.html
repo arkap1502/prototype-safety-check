@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Register of Examinations | Prototype Safety Check{% endblock %}
+{% block content %}
+  <section class="page-hero history-page">
+    <span class="kicker">Archive</span>
+    <h1>Register of examinations</h1>
+    <p>The {{ history|length }} most recent examinations recorded on this installation, newest first.</p>
+  </section>
+
+  <section class="card">
+    {% if history %}
+    <table class="data">
+      <thead><tr><th>Assessment</th><th>Target</th><th>Engine</th><th>Recorded (UTC)</th></tr></thead>
+      <tbody>
+      {% for h in history %}
+        <tr>
+          <td><span class="pill {{ h.verdict|lower if h.verdict|lower in ['safe','risky','critical'] else 'error' }}">{{ h.verdict }}</span></td>
+          <td>{{ h.target }}</td>
+          <td class="time">{{ h.engine|default('standard') }}</td>
+          <td class="time">{{ h.time }}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p class="note">No examinations recorded yet. Submit a link on the scanner page to open the register.</p>
+    {% endif %}
+    <div class="next-links no-print">
+      <a class="btn" href="/scanner" style="text-decoration:none;">New examination</a>
+    </div>
+  </section>
+{% endblock %}

@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Machine Interface | Prototype Safety Check{% endblock %}
+{% block content %}
+  <section class="page-hero api-page">
+    <span class="kicker">Developers</span>
+    <h1>Machine interface</h1>
+    <p>The same examination service is available programmatically over the web and from the command line. Responses are structured data.</p>
+  </section>
+
+  <section class="card">
+    <h2>Web endpoints</h2>
+    <p class="sub">Standard engine, high-efficiency engine, concurrent bulk, and the register feed.</p>
+    <pre class="api"><code>GET  /api/scan?url=https://example.com            # standard engine
+GET  /api/scan_fast?url=https://example.com       # high-efficiency engine
+POST /api/scan_bulk  {"urls": ["https://a", "https://b"]}   # bulk, max 20
+GET  /api/history                                 # examination register (data file)</code></pre>
+  </section>
+
+  <section class="card">
+    <h2>Command line</h2>
+    <p class="sub">No server required — scan straight from a terminal.</p>
+    <pre class="api"><code>python scanner.py https://example.com            # command line, standard
+python fast_scanner.py https://a https://b        # command line, high-efficiency + bulk</code></pre>
+    <div class="next-links no-print">
+      <a class="btn" href="/scanner" style="text-decoration:none;">Open the scanner</a>
+    </div>
+  </section>
+{% endblock %}

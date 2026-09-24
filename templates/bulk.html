@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Bulk Examination Outcome | Prototype Safety Check{% endblock %}
+{% block content %}
+  <section class="page-hero bulk-page">
+    <span class="kicker">Step 2 · Tabulation</span>
+    <h1>Bulk examination outcome</h1>
+    <p>{{ bulk.summary.total }} Links examined concurrently in {{ bulk.summary.total_time_s }} seconds ·
+      {{ bulk.summary.counts.Safe|default(0) }} Safe · {{ bulk.summary.counts.Risky|default(0) }} Risky ·
+      {{ bulk.summary.counts.Critical|default(0) }} Critical · {{ bulk.summary.counts.Error|default(0) }} Errors</p>
+  </section>
+
+  <section class="card">
+    <table class="data">
+      <thead><tr><th>Assessment</th><th>Link</th><th>Findings</th><th>Scan time</th></tr></thead>
+      <tbody>
+      {% for r in bulk.results %}
+        <tr>
+          <td><span class="status {{ 'FAIL' if r.verdict == 'Critical' else ('WARNING' if r.verdict == 'Risky' else 'PASS') }}">{{ r.verdict }}</span></td>
+          <td>{{ r.target }}</td>
+          <td>{{ r.fails }} failed / {{ r.warnings }} warnings</td>
+          <td>{{ r.scan_time_s if r.scan_time_s is not none else (r.response_time_s|string + 's') }}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    <p class="note">Bulk examinations are tabulated here. Submit any single link on the scanner page for its full clause-by-clause report.</p>
+    <div class="next-links no-print">
+      <a class="btn" href="/scanner" style="text-decoration:none;">Back to scanner</a>
+      <a class="btn-outline" href="/history" style="text-decoration:none;">View register →</a>
+    </div>
+  </section>
+{% endblock %}

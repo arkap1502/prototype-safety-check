@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Scanner | Prototype Safety Check{% endblock %}
+{% block content %}
+  <section class="page-hero scan-page">
+    <span class="kicker">Step 1 · Submission</span>
+    <h1>Submit link(s) for examination</h1>
+    <p>Enter a single link for the full findings report, or up to 20 links (one per line) for a concurrent bulk examination. Results open on their own dedicated report page.</p>
+  </section>
+
+  <section class="card no-print" id="scan" aria-labelledby="scan-heading">
+    <h2 id="scan-heading">Scan request</h2>
+    <p class="sub">Standard engine or High-Efficiency engine (parallel probes, pooled connections, 5-minute cache).</p>
+    {% if error %}
+    <div class="alert-error" role="alert">Notice: {{ error }}</div>
+    {% endif %}
+    <form method="post" action="/scan">
+      <label class="field-label" for="urls">Deployed link(s)</label>
+      <textarea class="scan-input" id="urls" name="urls" rows="1" required
+        placeholder="https://my-prototype.vercel.app — single link, full report">{{ prefill }}</textarea>
+      <div class="form-row">
+        <span class="engine-group" role="radiogroup" aria-label="Scan engine">
+          <label><input type="radio" name="engine" value="standard" {% if engine != 'fast' %}checked{% endif %}>Standard</label>
+          <label><input type="radio" name="engine" value="fast" {% if engine == 'fast' %}checked{% endif %}>High-Efficiency</label>
+        </span>
+        <button type="submit" class="btn">Run Safety Examination</button>
+      </div>
+      <label class="consent">
+        <input type="checkbox" name="consent" value="yes" checked>
+        <span>I confirm that I own the listed prototype(s), or that I hold written permission from the owner to conduct this passive safety examination.</span>
+      </label>
+    </form>
+  </section>
+
+  <div class="next-links no-print">
+    <a class="btn-outline" href="/history" style="text-decoration:none;">View examination register →</a>
+    <a class="btn-outline" href="/api" style="text-decoration:none;">Machine interface →</a>
+  </div>
+{% endblock %}
