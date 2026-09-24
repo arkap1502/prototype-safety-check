@@ -88,7 +88,8 @@ scanner.py        # Passive scanner (all 6 check categories)
 fast_scanner.py   # High-efficiency engine: parallel probes + bulk scan_urls()
 templates/
   landing.html    # Opening page (hero)
-  base.html       # Shared official layout (header/nav/footer/theme)
+  base.html       # Shared dashboard-shell layout (sidebar, top bar, theme)
+  dashboard.html  # Threat-overview dashboard page
   scanner.html    # Scan submission page
   report.html     # Single-URL examination report page
   bulk.html       # Bulk examination outcome page

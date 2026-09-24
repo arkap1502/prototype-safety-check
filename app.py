@@ -45,6 +45,47 @@ def index():
                            active="scanner")
 
 
+@app.route("/dashboard", methods=["GET"])
+def dashboard():
+    hist = load_history()
+    counts = {"Safe": 0, "Risky": 0, "Critical": 0, "Error": 0}
+    fails = warnings = 0
+    for h in hist:
+        v = h.get("verdict", "Error")
+        if v in counts:
+            counts[v] += 1
+        else:
+            counts["Error"] += 1
+        fails += h.get("fails", 0) or 0
+        warnings += h.get("warnings", 0) or 0
+    total = sum(counts.values())
+    palette = [("Safe", "#22c55e"), ("Risky", "#f59e0b"),
+               ("Critical", "#ef4444"), ("Error", "#64748b")]
+    segments = [{"label": k, "count": counts[k], "color": c} for k, c in palette]
+    if total:
+        stops, acc = [], 0.0
+        for s in segments:
+            pct = 100.0 * s["count"] / total
+            stops.append(f"{s['color']} {acc:.1f}% {acc + pct:.1f}%")
+            acc += pct
+        donut = "conic-gradient(" + ", ".join(stops) + ")"
+    else:
+        donut = "var(--line)"
+    coverage = [
+        {"icon": "💉", "name": "SQL Injection", "pct": 100},
+        {"icon": "✨", "name": "Cross-Site Scripting", "pct": 100},
+        {"icon": "🦠", "name": "Malware", "pct": 100},
+        {"icon": "🎣", "name": "Phishing", "pct": 100},
+        {"icon": "🌊", "name": "DoS Exposure", "pct": 100},
+        {"icon": "🔒", "name": "Man-in-the-Middle", "pct": 100},
+    ]
+    return render_template("dashboard.html", active="dashboard",
+                           stats={"total": total, "counts": counts,
+                                  "fails": fails, "warnings": warnings},
+                           segments=segments, donut=donut,
+                           coverage=coverage, recent=hist[:6])
+
+
 @app.route("/history", methods=["GET"])
 def history_page():
     return render_template("history.html", history=load_history(), active="history")
@@ -95,7 +136,8 @@ def _run_scan(raw, consent, engine):
             "engine": report.get("engine", "standard"),
             "time": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC"),
         })
-        return render_template("report.html", report=report, active="scanner")
+        return render_template("report.html", report=report, active="scanner",
+                               crumb="Examination Report")
     try:
         batch = scan_urls(urls, max_workers=8)
     except ValueError as e:
@@ -109,7 +151,8 @@ def _run_scan(raw, consent, engine):
             "engine": r.get("engine", "fast"),
             "time": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC"),
         })
-    return render_template("bulk.html", bulk=batch, active="scanner")
+    return render_template("bulk.html", bulk=batch, active="scanner",
+                           crumb="Bulk Outcome")
 
 
 @app.route("/scan", methods=["POST"])

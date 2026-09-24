@@ -12,8 +12,6 @@
     --bg:#eef2f6; --surface:#ffffff; --surface-2:#f5f8fb;
     --text:#152a3c; --muted:#5a7183; --line:#d5dfe7;
     --primary:#0f5cab; --primary-dark:#0a447f; --primary-ink:#ffffff;
-    --header-bg:#0d2c49; --header-text:#ffffff; --header-muted:#b9cfdf;
-    --notice-bg:#e3eef7; --notice-text:#0d2c49;
     --green:#047857; --green-bg:#e6f4ee; --amber:#b45309; --amber-bg:#fdf1e0;
     --red:#b91c1c; --red-bg:#fdecec; --info-bg:#e8f1f9;
     --input-bg:#f7fafc; --placeholder:#8499a8; --code-bg:#eef3f7;
@@ -22,14 +20,12 @@
   }
   [data-theme="dark"] {
     color-scheme:dark;
-    --bg:#000000; --surface:#101f2c; --surface-2:#0c1a26;
-    --text:#e6eff5; --muted:#93a9ba; --line:#223a4d;
+    --bg:#000000; --surface:#0d151d; --surface-2:#111c26;
+    --text:#e6eff5; --muted:#93a9ba; --line:#22303d;
     --primary:#3d9be9; --primary-dark:#2b7fc4; --primary-ink:#06121c;
-    --header-bg:#0b1e2e; --header-text:#eef5fa; --header-muted:#9db4c6;
-    --notice-bg:#12293c; --notice-text:#cfe2f0;
     --green:#34d399; --green-bg:rgba(52,211,153,.12); --amber:#fbbf24; --amber-bg:rgba(251,191,36,.12);
-    --red:#f87171; --red-bg:rgba(248,113,113,.12); --info-bg:#12293c;
-    --input-bg:#0b1a26; --placeholder:#5f7a8d; --code-bg:#0b1a26;
+    --red:#f87171; --red-bg:rgba(248,113,113,.12); --info-bg:#12202c;
+    --input-bg:#0b141c; --placeholder:#5f7a8d; --code-bg:#0b141c;
     --shadow:0 10px 30px rgba(0,0,0,.4);
     --radius:10px;
   }
@@ -40,28 +36,45 @@
   .container { max-width:100%; margin:0; padding:0 24px; }
   a { color:var(--primary); }
 
-  /* ---------- header ---------- */
-  .site-header { background:var(--header-bg); color:var(--header-text); }
-  .header-inner { display:flex; align-items:center; gap:16px; padding:14px 20px; }
-  .brand { display:flex; align-items:center; gap:12px; margin-right:auto;
-    color:var(--header-text); text-decoration:none; }
-  .brand-mark { display:inline-flex; align-items:center; justify-content:center;
-    width:42px; height:42px; border-radius:9px; font-size:22px;
-    background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.25); }
-  .brand strong { display:block; font-size:17px; letter-spacing:.2px; }
-  .brand small { display:block; font-size:12px; color:var(--header-muted); letter-spacing:1.2px; text-transform:uppercase; }
-  .main-nav { display:flex; gap:4px; }
-  .main-nav a { color:var(--header-text); text-decoration:none; font-size:14px; font-weight:600;
-    padding:8px 14px; border-radius:7px; }
-  .main-nav a:hover { background:rgba(255,255,255,.12); }
-  .main-nav a.current { background:rgba(255,255,255,.18); }
-  .theme-toggle { background:transparent; color:var(--header-text);
-    border:1px solid rgba(255,255,255,.4); border-radius:999px; padding:7px 15px;
-    font-size:13px; font-weight:700; cursor:pointer; white-space:nowrap; }
-  .theme-toggle:hover { background:rgba(255,255,255,.12); }
-  .notice-bar { background:var(--notice-bg); color:var(--notice-text);
-    font-size:13px; border-top:1px solid rgba(255,255,255,.08); }
-  .notice-bar .container { padding-top:8px; padding-bottom:8px; }
+  /* ---------- app shell + left sidebar (dashboard style) ---------- */
+  .app-shell { display:flex; min-height:100vh; }
+  .sidebar { width:250px; flex-shrink:0; background:var(--surface);
+    border-right:1px solid var(--line); padding:20px 14px;
+    display:flex; flex-direction:column; gap:4px;
+    position:sticky; top:0; height:100vh; }
+  .side-brand { display:flex; align-items:center; gap:10px; text-decoration:none;
+    color:var(--text); font-size:19px; font-weight:800; padding:4px 10px 16px; }
+  .side-brand span b { color:var(--primary); }
+  .side-label { font-size:11px; font-weight:800; letter-spacing:1.8px; color:var(--muted);
+    margin:6px 12px 8px; }
+  .sidebar nav { display:flex; flex-direction:column; gap:4px; }
+  .sidebar nav a { display:flex; align-items:center; gap:12px; padding:11px 14px;
+    border-radius:9px; color:var(--muted); text-decoration:none;
+    font-weight:600; font-size:14.5px; border-left:3px solid transparent; }
+  .sidebar nav a i { font-style:normal; font-size:17px; width:22px; text-align:center; }
+  .sidebar nav a:hover { background:var(--surface-2); color:var(--text); }
+  .sidebar nav a.on { background:var(--info-bg); color:var(--text); border-left-color:var(--primary); }
+  .side-sep { border:0; border-top:1px solid var(--line); margin:14px 6px; }
+  .side-foot { margin-top:auto; display:flex; flex-direction:column; gap:8px; }
+  .side-foot a.home-link { display:flex; align-items:center; gap:12px; padding:11px 14px;
+    border-radius:9px; color:var(--muted); text-decoration:none; font-weight:600; font-size:14.5px; }
+  .side-foot a.home-link:hover { background:var(--surface-2); color:var(--text); }
+  .theme-side { display:flex; align-items:center; gap:12px; padding:11px 14px; border-radius:9px;
+    background:transparent; border:1px solid var(--line); color:var(--muted);
+    font-weight:600; font-size:14.5px; cursor:pointer; font-family:inherit; width:100%; }
+  .theme-side:hover { color:var(--text); border-color:var(--primary); }
+
+  .main-col { flex:1; min-width:0; display:flex; flex-direction:column; }
+  .topbar { display:flex; align-items:center; gap:12px; padding:13px 24px;
+    background:var(--surface); border-bottom:1px solid var(--line);
+    position:sticky; top:0; z-index:40; }
+  .crumbs { font-size:14px; color:var(--muted); margin-right:auto; }
+  .crumbs a { color:var(--muted); text-decoration:none; }
+  .crumbs a:hover { color:var(--primary); }
+  .crumbs strong { color:var(--text); font-weight:700; }
+  .btn-small { padding:9px 18px; font-size:13.5px; }
+  .mini-footer { margin-top:auto; padding:14px 24px; border-top:1px solid var(--line);
+    color:var(--muted); font-size:12.5px; }
 
   /* ---------- page hero strip (per-page identity) ---------- */
   .page-hero { padding:30px 0 4px; }
@@ -74,6 +87,7 @@
   .page-hero.bulk-page { border-left:6px solid var(--amber); padding-left:18px; }
   .page-hero.history-page { border-left:6px solid var(--primary); padding-left:18px; }
   .page-hero.api-page { border-left:6px solid var(--primary); padding-left:18px; }
+  .page-hero.dash-page { border-left:6px solid var(--primary); padding-left:18px; }
 
   /* ---------- cards / forms ---------- */
   .card { background:var(--surface); border:1px solid var(--line); border-radius:12px;
@@ -104,6 +118,30 @@
   .btn-outline:hover { background:var(--info-bg); }
   .alert-error { border:1px solid var(--red); background:var(--red-bg); color:var(--red);
     border-radius:8px; padding:12px 16px; margin:16px 0; font-weight:600; }
+
+  /* ---------- dashboard stat cards + donut + bars ---------- */
+  .stat-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:14px; margin:20px 0 0; }
+  .stat-card { background:var(--surface); border:1px solid var(--line); border-radius:12px;
+    box-shadow:var(--shadow); padding:18px; }
+  .stat-card .s-icon { display:inline-flex; align-items:center; justify-content:center;
+    width:38px; height:38px; border-radius:9px; font-size:19px;
+    background:var(--surface-2); border:1px solid var(--line); margin-bottom:10px; }
+  .stat-card small { display:block; color:var(--muted); font-size:13px; }
+  .stat-card b { display:block; font-size:30px; letter-spacing:-.5px; }
+  .stat-card .trend { font-size:12.5px; color:var(--muted); }
+  .dash-grid { display:grid; grid-template-columns:1fr 1.4fr; gap:14px; }
+  .donut-wrap { display:flex; gap:20px; align-items:center; flex-wrap:wrap; margin-top:12px; }
+  .donut { width:150px; height:150px; border-radius:50%; position:relative; flex-shrink:0; }
+  .donut::after { content:""; position:absolute; inset:26px; border-radius:50%; background:var(--surface); }
+  .donut-legend { list-style:none; margin:0; padding:0; font-size:14px; }
+  .donut-legend li { display:flex; align-items:center; gap:9px; padding:5px 0; }
+  .dot { width:12px; height:12px; border-radius:50%; display:inline-block; }
+  .bar-row { display:grid; grid-template-columns:170px 1fr 44px; gap:10px; align-items:center;
+    padding:7px 0; font-size:13.5px; }
+  .bar-track { height:14px; border-radius:999px; background:var(--surface-2);
+    border:1px solid var(--line); overflow:hidden; }
+  .bar-fill { height:100%; border-radius:999px; background:linear-gradient(90deg,var(--primary),var(--green)); }
+  .bar-row .n { text-align:right; color:var(--muted); font-weight:700; }
 
   /* ---------- verdict ---------- */
   .verdict { display:flex; gap:14px; align-items:center; flex-wrap:wrap;
@@ -151,7 +189,7 @@
   table.data td { padding:10px 12px; border-bottom:1px solid var(--line); overflow-wrap:anywhere; }
   table.data tr:last-child td { border-bottom:0; }
 
-  /* ---------- pills / api / footer ---------- */
+  /* ---------- pills ---------- */
   .pill { display:inline-block; font-size:11.5px; font-weight:800; padding:2px 10px;
     border-radius:999px; margin-right:6px; }
   .pill.safe { background:var(--green-bg); color:var(--green); }
@@ -163,79 +201,67 @@
     padding:12px 14px; font-size:13.5px; overflow-x:auto; }
   pre.api code, code.inline { color:var(--primary); }
   .next-links { display:flex; gap:10px; flex-wrap:wrap; margin:18px 0 0; }
-  .site-footer { border-top:3px solid var(--primary); margin-top:36px;
-    background:var(--surface); }
-  .footer-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
-    gap:20px; padding:26px 20px; }
-  .site-footer h4 { margin:0 0 8px; font-size:14px; text-transform:uppercase; letter-spacing:1px; }
-  .site-footer p, .site-footer li { font-size:13.5px; color:var(--muted); }
-  .site-footer ul { margin:0; padding-left:18px; }
-  .footer-base { border-top:1px solid var(--line); font-size:12.5px; color:var(--muted); }
-  .footer-base .container { padding-top:12px; padding-bottom:16px; }
 
-  @media (max-width:760px){
-    .container { padding:0 16px; }
-    .main-nav { display:none; } .form-row .btn { width:100%; }
-    .page-hero h1 { font-size:26px; }
+  @media (max-width:900px){
+    .app-shell { flex-direction:column; }
+    .sidebar { width:100%; height:auto; position:static; flex-direction:row;
+      align-items:center; padding:10px 12px; overflow-x:auto; border-right:0;
+      border-bottom:1px solid var(--line); }
+    .side-brand { padding:6px 10px; font-size:17px; white-space:nowrap; }
+    .side-label, .side-sep, .side-foot { display:none; }
+    .sidebar nav { flex-direction:row; }
+    .sidebar nav a { white-space:nowrap; border-left:0; border-bottom:3px solid transparent;
+      border-radius:7px 7px 0 0; }
+    .sidebar nav a.on { border-bottom-color:var(--primary); }
+    .dash-grid { grid-template-columns:1fr; }
   }
   @media print {
-    .site-header, .site-footer, .no-print { display:none !important; }
+    .sidebar, .topbar, .mini-footer, .no-print { display:none !important; }
     body { background:#fff; } .card { box-shadow:none; }
   }
 </style>
 </head>
 <body>
 
-<header class="site-header">
-  <div class="container header-inner">
-    <a class="brand" href="/">
-      <span class="brand-mark">🛡️</span>
-      <div><strong>Prototype Safety Check</strong><small>Official Web Security Scanner</small></div>
-    </a>
-    <nav class="main-nav no-print" aria-label="Primary">
-      <a href="/" class="{% if active == 'home' %}current{% endif %}">Home</a>
-      <a href="/scanner" class="{% if active == 'scanner' %}current{% endif %}">Scanner</a>
-      <a href="/history" class="{% if active == 'history' %}current{% endif %}">History</a>
-      <a href="/api" class="{% if active == 'api' %}current{% endif %}">Interface</a>
+<div class="app-shell">
+  <aside class="sidebar no-print" aria-label="Section navigation">
+    <a class="side-brand" href="/">🛡️ <span>PS<b>Check</b></span></a>
+    <div class="side-label">MENU</div>
+    <nav>
+      <a href="/dashboard" class="{% if active == 'dashboard' %}on{% endif %}"><i>📊</i>Dashboard</a>
+      <a href="/scanner" class="{% if active == 'scanner' %}on{% endif %}"><i>🔍</i>Scanner</a>
+      <a href="/history" class="{% if active == 'history' %}on{% endif %}"><i>🗂️</i>Reports</a>
+      <a href="/api" class="{% if active == 'api' %}on{% endif %}"><i>🔌</i>Interface</a>
     </nav>
-    <button type="button" id="theme-toggle" class="theme-toggle" onclick="toggleTheme()">🌙 Dark</button>
-  </div>
-  <div class="notice-bar"><div class="container">
-    <strong>Official notice:</strong> this is a <strong>passive</strong> scanner — one page request plus safe
-    header, transport security and domain name checks. No attacks are sent. Only scan websites you own or have written permission to test.
-    Repository links (GitHub / GitLab / Bitbucket) are not accepted; submit the deployed live link.
-  </div></div>
-</header>
+    <hr class="side-sep">
+    <nav>
+      <a href="/#checks"><i>🛡️</i>Checks</a>
+      <a href="/#how"><i>📖</i>Process</a>
+    </nav>
+    <div class="side-foot">
+      <button type="button" class="theme-side" id="theme-toggle" onclick="toggleTheme()">🌙 Theme</button>
+      <a class="home-link" href="/">🏠 Home page</a>
+    </div>
+  </aside>
 
-<main class="container">
-{% block content %}{% endblock %}
-</main>
+  <div class="main-col">
+    <div class="topbar no-print">
+      {% set crumbs = {'dashboard':'Dashboard','scanner':'New Examination','history':'Examination Register','api':'Machine Interface'} %}
+      <div class="crumbs"><a href="/">Home</a> › <strong>{{ crumb|default(crumbs.get(active, 'Console')) }}</strong></div>
+      {% if active != 'scanner' %}
+      <a class="btn btn-small" href="/scanner" style="text-decoration:none;">＋ New Scan</a>
+      {% endif %}
+    </div>
 
-<footer class="site-footer">
-  <div class="container footer-grid">
-    <div>
-      <h4>About this service</h4>
-      <p>Prototype Safety Check is an official passive examination tool for deployed prototypes.
-        It performs read-only checks and never attempts exploitation.</p>
-    </div>
-    <div>
-      <h4>Scope of examination</h4>
-      <ul>
-        <li>Transport security and encryption configuration</li>
-        <li>Injection, scripting &amp; content-security posture</li>
-        <li>Malware indicators &amp; phishing resemblance</li>
-      </ul>
-    </div>
-    <div>
-      <h4>Legal notice</h4>
-      <p>Use of this service constitutes confirmation that you own each submitted website or hold
-        the owner's written permission. Results are advisory and do not certify absolute security.</p>
-    </div>
+    <main class="container">
+    {% block content %}{% endblock %}
+    </main>
+
+    <footer class="mini-footer">
+      Prototype Safety Check · Passive examination only · Only test sites you own or may test · MIT Licence
+    </footer>
   </div>
-  <div class="footer-base"><div class="container">
-    Prototype Safety Check · Official Website · Passive examination only · MIT Licence
-  </div></div>
-</footer>
+</div>
 
 {% block scripts %}{% endblock %}
 <script>
@@ -243,7 +269,7 @@ function paintThemeButton(){
   var b = document.getElementById('theme-toggle');
   if (!b) return;
   var t = document.documentElement.getAttribute('data-theme') || 'light';
-  b.textContent = (t === 'dark') ? '☀️ Light' : '🌙 Dark';
+  b.textContent = (t === 'dark') ? '☀️ Theme' : '🌙 Theme';
 }
 function toggleTheme(){
   var cur = document.documentElement.getAttribute('data-theme') || 'light';
