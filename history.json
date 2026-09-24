@@ -1,5 +1,23 @@
 [
   {
+    "id": "c1659d71b0d5",
+    "target": "https://github.com/b",
+    "verdict": "Error",
+    "fails": 0,
+    "warnings": 0,
+    "engine": "fast",
+    "time": "2026-09-24 08:09 UTC"
+  },
+  {
+    "id": "84ec4bda692b",
+    "target": "https://github.com/a",
+    "verdict": "Error",
+    "fails": 0,
+    "warnings": 0,
+    "engine": "fast",
+    "time": "2026-09-24 08:09 UTC"
+  },
+  {
     "target": "https://dribbble.com/tags/cybersecurity-website",
     "verdict": "Risky",
     "fails": 0,
@@ -142,21 +160,5 @@
     "warnings": 0,
     "engine": "fast",
     "time": "2026-09-24 05:49 UTC"
-  },
-  {
-    "target": "https://github.com/a",
-    "verdict": "Error",
-    "fails": 0,
-    "warnings": 0,
-    "engine": "fast",
-    "time": "2026-09-24 05:49 UTC"
-  },
-  {
-    "target": "https://github.com/b",
-    "verdict": "Error",
-    "fails": 0,
-    "warnings": 0,
-    "engine": "fast",
-    "time": "2026-09-24 05:41 UTC"
   }
 ]

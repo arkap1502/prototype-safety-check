@@ -1,8 +1,9 @@
 """Flask web UI for Prototype Safety Check. Run: python app.py"""
 import json
 import os
+import uuid
 from datetime import datetime, timezone
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, jsonify, render_template, abort
 
 from scanner import scan_url
 from fast_scanner import fast_scan_url, scan_urls
@@ -10,6 +11,7 @@ from fast_scanner import fast_scan_url, scan_urls
 app = Flask(__name__)
 BASE = os.path.dirname(os.path.abspath(__file__))
 HISTORY_FILE = os.path.join(BASE, "history.json")
+REPORTS_DIR = os.path.join(BASE, "reports")
 
 
 def load_history():
@@ -19,6 +21,41 @@ def load_history():
             return data if isinstance(data, list) else []
     except Exception:
         return []
+
+
+def save_report(report):
+    """Persist a full report to disk. Returns its id."""
+    rid = uuid.uuid4().hex[:12]
+    try:
+        os.makedirs(REPORTS_DIR, exist_ok=True)
+        with open(os.path.join(REPORTS_DIR, rid + ".json"), "w", encoding="utf-8") as f:
+            json.dump(report, f, indent=2, default=str)
+    except Exception:
+        pass
+    return rid
+
+
+def load_report(rid):
+    """Load a persisted full report. Returns None if missing/invalid."""
+    if not rid or not rid.isalnum():
+        return None
+    try:
+        with open(os.path.join(REPORTS_DIR, rid + ".json"), "r", encoding="utf-8") as f:
+            data = json.load(f)
+            return data if isinstance(data, dict) else None
+    except Exception:
+        return None
+
+
+def prune_reports(hist):
+    """Delete stored reports no longer referenced by the register."""
+    try:
+        keep = {h.get("id") for h in hist if h.get("id")}
+        for name in os.listdir(REPORTS_DIR):
+            if name.endswith(".json") and name[:-5] not in keep:
+                os.remove(os.path.join(REPORTS_DIR, name))
+    except Exception:
+        pass
 
 
 def save_history(entry, limit=20):
@@ -128,7 +165,9 @@ def _run_scan(raw, consent, engine):
             report = fast_scan_url(urls[0]) if engine == "fast" else scan_url(urls[0])
         except ValueError as e:
             return _render(error=str(e), engine=engine, prefill=raw)
-        save_history({
+        rid = save_report(report)
+        hist = save_history({
+            "id": rid,
             "target": report.get("target"),
             "verdict": report.get("verdict"),
             "fails": report.get("fails"),
@@ -136,6 +175,7 @@ def _run_scan(raw, consent, engine):
             "engine": report.get("engine", "standard"),
             "time": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC"),
         })
+        prune_reports(hist)
         return render_template("report.html", report=report, active="scanner",
                                crumb="Examination Report")
     try:
@@ -143,7 +183,10 @@ def _run_scan(raw, consent, engine):
     except ValueError as e:
         return _render(error=str(e), engine=engine, prefill=raw)
     for r in batch["results"]:
+        rid = save_report(r)
+        r["id"] = rid
         save_history({
+            "id": rid,
             "target": r.get("target"),
             "verdict": r.get("verdict"),
             "fails": r.get("fails"),
@@ -151,8 +194,19 @@ def _run_scan(raw, consent, engine):
             "engine": r.get("engine", "fast"),
             "time": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC"),
         })
+    prune_reports(load_history())
     return render_template("bulk.html", bulk=batch, active="scanner",
                            crumb="Bulk Outcome")
+
+
+@app.route("/report/<rid>", methods=["GET"])
+def saved_report(rid):
+    """Open the full saved result of a past examination from the register."""
+    report = load_report(rid)
+    if report is None:
+        abort(404, description="Saved report not found. It may have been pruned from the register.")
+    return render_template("report.html", report=report, active="scanner",
+                           crumb="Examination Report")
 
 
 @app.route("/scan", methods=["POST"])

@@ -11,7 +11,7 @@
 
   <section class="card">
     <table class="data">
-      <thead><tr><th>Assessment</th><th>Link</th><th>Findings</th><th>Scan time</th></tr></thead>
+      <thead><tr><th>Assessment</th><th>Link</th><th>Findings</th><th>Scan time</th><th>Full result</th></tr></thead>
       <tbody>
       {% for r in bulk.results %}
         <tr>
@@ -19,6 +19,7 @@
           <td>{{ r.target }}</td>
           <td>{{ r.fails }} failed / {{ r.warnings }} warnings</td>
           <td>{{ r.scan_time_s if r.scan_time_s is not none else (r.response_time_s|string + 's') }}</td>
+          <td>{% if r.id %}<a href="/report/{{ r.id }}">Open →</a>{% else %}<span class="time">—</span>{% endif %}</td>
         </tr>
       {% endfor %}
       </tbody>

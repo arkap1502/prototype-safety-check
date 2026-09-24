@@ -1,0 +1,27 @@
+{
+  "target": "https://github.com/a",
+  "final_url": "https://github.com/a",
+  "host": "github.com",
+  "status_code": null,
+  "response_time_s": null,
+  "server": "unknown",
+  "content_kb": 0,
+  "redirect_chain": [],
+  "tls": {},
+  "verdict": "Error",
+  "level": "error",
+  "score": 0,
+  "fails": 0,
+  "warnings": 0,
+  "passes": 0,
+  "findings": [
+    {
+      "category": "General",
+      "name": "Fetch",
+      "status": "FAIL",
+      "detail": "Repo links (GitHub/GitLab/Bitbucket) are not supported. Paste the deployed live link instead (e.g. https://my-app.vercel.app).",
+      "fix": "Check the URL is a live deployed link (not a repo link)."
+    }
+  ],
+  "note": "Scan did not complete."
+}
